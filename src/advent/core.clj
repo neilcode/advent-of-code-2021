@@ -7,7 +7,7 @@
   [filename & {:keys [root path]
                :or
                {root (System/getProperty "user.dir")
-                path "src/calendar/"}}]
+                path "resources/"}}]
   (-> (slurp (str root "/" path filename))
       (string/split #"\n")))
 
