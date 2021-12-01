@@ -13,8 +13,7 @@
 (def part-two
   (->> input
        (partition 3 1)
+       (map #(apply + %))
        (partition 2 1)
-       (filter (fn [[window-a window-b]]
-                 (< (apply + window-a)
-                    (apply + window-b))))
+       (filter #(apply < %))
        count)) ;;1789
