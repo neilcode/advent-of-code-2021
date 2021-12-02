@@ -4,25 +4,25 @@
 (def input (a/each-line "2021/day_02.txt"))
 ;; part one
 (defn answer [sub] (* (sub :horizontal) (sub :depth)))
-(defn forward [sub x] (update sub :horizontal #(+ % x)))
-(defn up      [sub x] (update sub :depth  #(- % x)))
-(defn down    [sub x] (update sub :depth  #(+ % x)))
+(defn forward [sub amt] (update sub :horizontal #(+ % amt)))
+(defn up      [sub amt] (update sub :depth  #(- % amt)))
+(defn down    [sub amt] (update sub :depth  #(+ % amt)))
 ;; part two
-(defn aim-up      [sub x] (update sub :aim  #(- % x)))
-(defn aim-down    [sub x] (update sub :aim  #(+ % x)))
+(defn aim-up      [sub amt] (update sub :aim  #(- % amt)))
+(defn aim-down    [sub amt] (update sub :aim  #(+ % amt)))
 (defn aim-forward
-  [sub x]
+  [sub amt]
   (as-> sub $
-    (forward $ x)
-    (down $ (* x ($ :aim)))))
+    (forward $ amt)
+    (down $ (* amt ($ :aim)))))
 
 (defn part-one [instructions]
   (reduce
    (fn [sub instruction]
      (condp re-matches instruction
-       #"forward (\d+)" :>> (fn [[_ x]] (forward sub (Integer. x)))
-       #"up (\d+)"      :>> (fn [[_ x]] (up sub (Integer. x)))
-       #"down (\d+)"    :>> (fn [[_ x]] (down sub (Integer. x)))))
+       #"forward (\d+)" :>> (fn [[_ amt]] (forward sub (Integer. amt)))
+       #"up (\d+)"      :>> (fn [[_ amt]] (up sub (Integer. amt)))
+       #"down (\d+)"    :>> (fn [[_ amt]] (down sub (Integer. amt)))))
    {:horizontal 0 :depth 0}
    instructions))
 
@@ -30,9 +30,9 @@
   (reduce
    (fn [sub instruction]
      (condp re-matches instruction
-       #"forward (\d+)" :>> (fn [[_ x]] (aim-forward sub (Integer. x)))
-       #"up (\d+)"      :>> (fn [[_ x]] (aim-up sub (Integer. x)))
-       #"down (\d+)"    :>> (fn [[_ x]] (aim-down sub (Integer. x)))))
+       #"forward (\d+)" :>> (fn [[_ amt]] (aim-forward sub (Integer. amt)))
+       #"up (\d+)"      :>> (fn [[_ amt]] (aim-up sub (Integer. amt)))
+       #"down (\d+)"    :>> (fn [[_ amt]] (aim-down sub (Integer. amt)))))
    {:horizontal 0 :depth 0 :aim 0}
    instructions))
 

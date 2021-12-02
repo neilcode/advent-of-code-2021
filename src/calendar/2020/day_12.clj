@@ -45,23 +45,6 @@
   (-> (navigate nav-fns input {:heading "E" :coords {:x 0 :y 0}})
       manhattan-distance))
 
-(t/testing "bearing"
-  (t/is (= (->> {:heading "E"} (bear-right 90) (bear-left 90))
-           {:heading "E"}))
-  (t/is (= (bear-right 180 {:heading "S"}) {:heading "N"})))
-
-(t/testing "movement"
-  (t/is (= (move-south 4 {:coords {:x 0 :y 0}}) {:coords {:x 0 :y -4}}))
-  (t/is (= (move-ahead 10 {:coords {:x 0 :y 0}}) {:coords {:x -10 :y 0}}))
-  (t/is (= (move-ahead 4 {:heading "S" :coords {:x 0 :y 0}}) {:heading "S" :coords {:x 0 :y -4}}))
-  (t/is (= (move-north 8 {:coords {:x 0 :y -4}}) {:coords {:x 0 :y 4}})))
-
-(t/testing "journey"
-  (t/is (= (navigate nav-fns ["F4" "R180" "E23"] {:heading "S" :coords {:x 0 :y 0}})
-           {:heading "N" :coords {:x 23 :y -4}})))
-
-;;;;;;;;;;;; PART TWO ;;;;;;;;;;;
-
 (defn move-wp-north [clicks vessel] (update-in vessel [:waypoint :y] #(+ % clicks)))
 (defn move-wp-south [clicks vessel] (update-in vessel [:waypoint :y] #(- % clicks)))
 (defn move-wp-east  [clicks vessel] (update-in vessel [:waypoint :x] #(+ % clicks)))
