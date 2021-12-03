@@ -7,7 +7,7 @@
 (defn bits-at [idx coll] (mapv (bit-at idx) coll))
 (defn to-decimal [binary-arr] (Integer/parseInt (str/join binary-arr) 2))
 
-(defn commonalities
+(defn classifier
   "Takes a frequency map of occuring bits e.g. {'0' 5 '1' 2} and declares the most- and least-common bits"
   [freqs]
   (let [ones   (get freqs "1")
@@ -22,7 +22,7 @@
   [diagnostic-report]
   (reduce
    (fn [rates idx]
-     (let [{:keys [most-common least-common]} (->> diagnostic-report (bits-at idx) frequencies commonalities)]
+     (let [{:keys [most-common least-common]} (->> diagnostic-report (bits-at idx) frequencies classifier)]
        {:least-common (conj (:least-common rates) least-common)
         :most-common (conj (:most-common rates) most-common)}))
    {:least-common [] :most-common []}
@@ -37,11 +37,9 @@
   (loop [filtered-nums diagnostic-report
          idx 0]
     (let [grouped-by-bit (group-by (bit-at idx) filtered-nums)
-          selected-bit (criterion
-                        (commonalities
-                         (-> grouped-by-bit
-                             (update "1" count)
-                             (update "0" count))))]
+          selected-bit (criterion (classifier (-> grouped-by-bit
+                                                  (update "1" count)
+                                                  (update "0" count))))]
       (cond
         (= 1 (count filtered-nums)) (first filtered-nums) ;; win
         :else (recur
