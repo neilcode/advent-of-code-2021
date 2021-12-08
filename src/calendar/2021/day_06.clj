@@ -1,98 +1,75 @@
 (ns calendar.2021.day-06
   "--- Day 6: Lanternfish ---
-   https://adventofcode.com/2021/day/6"
+   https://adventofcode.com/2021/day/6
+   
+   Started part-one with a brute force solution that involved having 
+   a physical presence for every fish. Part-two destroyed my CPU and 
+   ate 29GB of RAM before imploding.
+
+   Reapproaching this problem (there were tons of hints in the prompt), 
+   I made an array where each index represented a day in the lanternfish 
+   lifecycle. The value at a given index represents the total number of 
+   fish currently on that day of their lifecycle. 
+   
+   Every day, the fish at day 0 get reset to day 6 (added to whoever 
+   is already there) and spawn a fish that starts on day 8."
   (:require [advent.core :as elves]))
 
+(defn next-day 
+  "All fish at index (day) 0 are reset to index (day) 6 and added to whoever is already there.
+   For every fish reset this way, add 1 new lanternfish to index (day) 8."
+  [lifecycle]
+  (let [[today & days] lifecycle]
+    (-> (into [] days)
+        (update 6 #(+ % today))
+        (conj today)))) ;; 
 
-(defn ->fish [x] {:timer (Integer. x)})
-(defn reset-fish [] (->fish 6))
-(defn new-fish [] (assoc (->fish 8)
-                         :hatchling true))
+(defn after-n-days [num-days input] 
+  (let [lifecycle [0 0 0 0 0 0 0 0 0]
+        current-day (reduce #(update %1 %2 inc) lifecycle input)
+        time (iterate next-day current-day)]
+    (nth time num-days)))
 
-(defn will-spawn-fish? [lanternfish]
-  (and (= 6 (:timer lanternfish))
-       (not (:hatchling lanternfish))))
+(defn count-fish [lifecycle] (apply + lifecycle))
 
-(defn age-fish [lanternfish]
-  (cond
-    (zero? (lanternfish :timer)) (reset-fish)
-    :else (update lanternfish :timer dec)))
+(def input-fish (elves/each-line "2021/day_06.txt" :matcher #"," :mapfn #(Integer. %)))
 
-(defn hatchlings [school]
-  (-> (filter will-spawn-fish? school)
-      count
-      (repeat (new-fish))))
+(def part-one (-> (after-n-days 80 input-fish) count-fish))
+(def part-two (-> (after-n-days 256 input-fish) count-fish))
 
-(defn append-hatchlings [school] (concat school (hatchlings school)))
+(= 377263 part-one)
+(= 1695929023803 part-two)
 
+(comment 
+  "brute-force solution that couldn't withstand part2. keeping around for fun"
+         
+  (defn ->fish [x] {:timer (Integer. x)})
+  (defn reset-fish [] (->fish 6))
+  (defn new-fish [] (assoc (->fish 8)
+                           :hatchling true))
 
-(defn tick [school] (-> (map age-fish school) append-hatchlings))
-(defn days [school] (iterate tick school))
+  (defn will-spawn-fish? [lanternfish]
+    (and (= 6 (:timer lanternfish))
+         (not (:hatchling lanternfish))))
 
-(def input-fish (elves/each-line "2021/day_06.txt" :matcher #"," :mapfn ->fish))
+  (defn age-fish [lanternfish]
+    (cond
+      (zero? (lanternfish :timer)) (reset-fish)
+      :else (update lanternfish :timer dec)))
 
-;;(def part-one (count (nth (days input-fish) 80)))
-;;(= part-one 377263)
+  (defn hatchlings [school]
+    (-> (filter will-spawn-fish? school)
+        count
+        (repeat (new-fish))))
 
-;; part-two is absurd so I need a new way of doing this
-
-(defn down-to-zero [x] (range x -1 -1))
-(defn lfish [x] (lazy-cat (down-to-zero x) (cycle (down-to-zero 6))))
-(defn newfish [] (lazy-cat (repeat 8 :hatchling) (cycle (down-to-zero 6))))
-
-(defn births [day-num fish] (count (filter #(= 6 %) (take (inc day-num) fish))))
-
-
-;; something missing here, I think I need to track the day number and use it to offset the cycle time when spawning
-;; newfish. That way the number of new fish dwindles on every iteration and I can loop until i have no new fish 
-;; for the iteration
-(defn new-part-one
-  [school days]
-
-  (let [num-fish-born (apply + (map #(births days (lfish %)) school))]
-    (+ (count school)
-       (* num-fish-born (births days (newfish))))))
-
+  (defn append-hatchlings [school] (concat school (hatchlings school)))
 
 
+  (defn tick [school] (-> (map age-fish school) append-hatchlings))
+  (defn days [school] (iterate tick school))
+  
+  (def part-one (count (nth (days input-fish) 80)))
+  (= part-one 377263)
+)
 
 
-
-(new-part-one (elves/each-line "2021/day_06.txt" :matcher #"," :mapfn #(Integer. %)) 80)
-
-
-(comment :tests
-  ;; Initial state: 3,4,3,1,2
-  ;; After  1 day:  2,3,2,0,1
-  ;; After  2 days: 1,2,1,6,0,8
-  ;; After  3 days: 0,1,0,5,6,7,8
-  ;; After  4 days: 6,0,6,4,5,6,7,8,8         
-         (= (map :timer
-                 (nth (days (map ->fish [3 4 3 1 2]))
-                      0))
-            '(3 4 3 1 2))
-
-         (= (map :timer
-                 (nth (days (map ->fish [3 4 3 1 2]))
-                      1))
-            '(2 3 2 0 1))
-
-         (= (map :timer
-                 (nth (days (map ->fish [3 4 3 1 2]))
-                      2))
-            '(1 2 1 6 0 8))
-
-         (= (map :timer
-                 (nth (days (map ->fish [3 4 3 1 2]))
-                      4))
-            '(6 0 6 4 5 6 7 8 8))
-;; test hatchlings
-         (= (hatchlings [{:timer 6} {:timer 3} {:timer 6}])
-            (list (->fish 8) (->fish 8)))
-
-         (= (append-hatchlings (list (->fish 6) (->fish 3) (->fish 6)))
-            (list (->fish 6)
-                  (->fish 3)
-                  (->fish 6)
-                  (->fish 8)
-                  (->fish 8))))
